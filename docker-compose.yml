@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:alpine
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: dockeruser
+      POSTGRES_DB: pets
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets:
+      - db_root_password
+
+  web:
+    build: ./web
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_USER: dockeruser
+      DB_NAME: pets
+      DB_PORT: '5432'
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+
+volumes:
+  pg-data:
+
+secrets:
+  db_root_password:
+    file: ./db_root_password.txt
+  db_password:
+    file: ./db_password.txt
